@@ -2227,8 +2227,46 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeController", ['$
 
 		$scope.refreshView();
 	};
+	
 
+	/**
+	 * 目前cubes官方定义measure的字段为数值类型
+	 * 因此，如果你需要measure的字段为字符串时，它会默认转化为数值类型
+	 * 在Facts Data页面中看到数据展示会有问题。
+	 * 因此，写该函数，默认不转换该值，原数据返回。
+	 * created by gholay
+	 * @param {*} agmes 
+	 */
+	$scope.columnNotFormatFunction = function(agmes) {
 
+		var view = $scope.view;
+
+		var measure = agmes;
+
+		if (!measure) {
+			return function(value) {
+				return value;
+			};
+		}
+
+		if ('measure' in agmes) {
+			measure = $.grep(view.cube.measures, function(item, idx) { return item.ref == agmes.measure; })[0];
+		}
+
+		var formatterFunction = null;
+		if (measure && ('cv-formatter' in measure.info)) {
+			formatterFunction = function(value, row) {
+				return eval(measure.info['cv-formatter']);
+			};
+		} else {
+			formatterFunction = function(value) {
+				return value ;
+				//return Math.formatnumber(value, (agmes.ref=="record_count" ? 0 : 2));
+			};
+		}
+
+		return formatterFunction;
+	};
 	/**
 	 * Accepts an aggregation or a measure and returns the formatter function.
 	 *
@@ -3438,7 +3476,7 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFactsController"
 				headerCellClass: "cv-grid-header-measure",
 				//type : "number",
 				cellTemplate: '<div class="ui-grid-cell-contents" title="TOOLTIP">{{ col.colDef.formatter(COL_FIELD, row, col) }}</div>',
-				formatter: $scope.columnFormatFunction(measure),
+				formatter: $scope.columnNotFormatFunction(measure),
 				//footerValue: $scope.columnFormatFunction(ag)(data.summary[ag.ref], null, col)
 				//formatoptions: {},
 				//cellattr: cubesviewer.views.cube.explore.columnTooltipAttr(ag.ref),
