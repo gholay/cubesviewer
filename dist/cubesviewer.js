@@ -2227,8 +2227,11 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeController", ['$
 
 		$scope.refreshView();
 	};
+
+
 	
 
+	
 	/**
 	 * 目前cubes官方定义measure的字段为数值类型
 	 * 因此，如果你需要measure的字段为字符串时，它会默认转化为数值类型
@@ -2267,6 +2270,9 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeController", ['$
 
 		return formatterFunction;
 	};
+
+
+
 	/**
 	 * Accepts an aggregation or a measure and returns the formatter function.
 	 *
@@ -2753,6 +2759,9 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 		// If there are cells, show them
 		//$scope._sortData(data.cells, false);
 		$scope._addRows(data);
+		console.log('row data:');
+		console.log(data);
+		
 
 		/*
 		colNames.sort();
@@ -2765,6 +2774,8 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 		$(view.params.drilldown).each(function(idx, e) {
 			label.push(view.cube.cvdim_dim(e).label);
 		});
+
+
 		for (var i = 0; i < view.params.drilldown.length; i++) {
 
 			// Get dimension
@@ -2778,6 +2789,7 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 			var footer = "";
 			if (i == 0) footer = (cubesService.buildQueryCuts(view).length == 0) ? "<b>Summary</b>" : '<b>Summary <i style="color: #ddaaaa;">(Filtered)</i></b>';
 
+			
 			view.grid.columnDefs.splice(i, 0, {
 				name: label[i],
 				field: "key" + i,
@@ -2794,6 +2806,8 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 		}
 
 		if (view.params.drilldown.length == 0) {
+			
+			
 			view.grid.columnDefs.splice(0, 0, {
 				name: view.cube.label,
 				field: "key" + 0,
@@ -2804,6 +2818,7 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 				sort: $scope.defineColumnSort("key" + 0),
 				//type: "string"
 			});
+
 		}
 
 
@@ -3036,6 +3051,7 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFilterDimensionC
 	 * Load dimension values.
 	 */
 	$scope.loadDimensionValues = function() {
+		console.log('loadDimensionValues-----------');
 
 		var params = {
 			"hierarchy": $scope.parts.hierarchy.name,
@@ -3376,8 +3392,19 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFactsController"
 		$rootScope.$apply();
 
 		var dimensions = view.cube.dimensions;
+		/**
+		 * 注释掉measures 
+		 * created by gholay
+		 */
 		var measures = view.cube.measures;
-        var details = view.cube.details;
+		//var measures = [];
+		var details = view.cube.details;
+		
+		console.log("show datas:");
+		console.log(dimensions);
+		console.log(measures);
+
+		
 
 	    // Configure grid
 	    angular.extend($scope.view.grid, {
@@ -3410,7 +3437,10 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFactsController"
 			enableHiding: false,
 			width: 80, //cubesviewer.views.cube.explore.defineColumnWidth(view, "id", 65),
 		});
-
+		//view.grid.columnDefs[1].visible = false ;
+		console.log('dimensions:');
+		console.log(view.grid.columnDefs);
+		console.log(dimensions);
 		for (var dimensionIndex in dimensions) {
 
 			var dimension = dimensions[dimensionIndex];
@@ -3464,6 +3494,37 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFactsController"
 
 			}
 		}
+		console.log('measures:');
+		console.log(view.grid.columnDefs);
+		view.grid.columnDefs[1].visible = false ;
+		console.log(measures);
+		/**
+		 * 重新定义columnDefs  start
+		 * 使数据可以有效的显示
+		 * created by gholay
+		 */
+		var private_column = ['id','loanid', 'accountid' , 'Repeat Account',
+								  'age','application_date', 'disbursed_date' , 'repayment_date',
+								  'approved_date','Invite Channel', 'gender' , 'Disbursed Bank',
+								  'Loan Purpose','rejected_date'
+	
+		];
+		var tmp_column = [];
+		for(var i=0;i< view.grid.columnDefs.length ; i++){
+			var d = view.grid.columnDefs[i];
+			if($.inArray(d.name, private_column) >= 0 ){
+				tmp_column.push(d);
+			}
+		}
+		view.grid.columnDefs = tmp_column;
+		console.log('private column :');
+		console.log(tmp_column);
+		/**
+		 * 重新定义dimensions  end
+		 * created by gholay
+		 */
+
+
 
 		for (var measureIndex in measures) {
 			var measure = measures[measureIndex];
@@ -3521,7 +3582,8 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeFactsController"
 	 * Adds rows.
 	 */
 	$scope._addRows = function(data) {
-
+		console.log('add rows');
+		console.log(data);
 		var view = $scope.view;
 		var rows = view.grid.data;
 
@@ -7167,7 +7229,8 @@ angular.module('cv.cubes').service("gaService", ['$rootScope', '$http', '$cookie
     "  <ul class=\"dropdown-menu dropdown-menu-right cv-view-menu-drilldown\">\n" +
     "\n" +
     "      <!-- if ((grayout_drill) && ((($.grep(view.params.drilldown, function(ed) { return ed == dimension.name; })).length > 0))) { -->\n" +
-    "      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
+	//"      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
+	"      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
     "        <a href=\"\">{{ dimension.label }}</a>\n" +
     "      </li>\n" +
     "      <li ng-repeat-end ng-if=\"dimension.levels.length != 1\" class=\"dropdown-submenu\">\n" +
