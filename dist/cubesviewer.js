@@ -2473,6 +2473,19 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeController", ['$
 		}
 	};
 
+	$scope.defineAggregateColumnWidth = function(column, vdefault) {
+		console.log('defineAggregateColumnWidth:');
+		console.log(column);
+		console.log(vdefault);
+		if (column in $scope.view.params.columnWidths) {
+			return $scope.view.params.columnWidths[column];
+		} else {
+			return vdefault;
+		}
+	};
+
+
+
 	$scope.defineColumnSort = function(column) {
 		var columnSort = null;
 		if ($scope.view.params.columnSort[$scope.view.params.mode] && $scope.view.params.columnSort[$scope.view.params.mode][column]) {
@@ -2647,7 +2660,7 @@ Math.formatnumber = function(value, decimalPlaces, decimalSeparator, thousandsSe
 
 angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreController", ['$rootScope', '$scope', '$timeout', 'cvOptions', 'cubesService', 'viewsService', 'dialogService', 'uiGridConstants',
                                                      function ($rootScope, $scope, $timeout, cvOptions, cubesService, viewsService, dialogService, uiGridConstants) {
-
+    
 	$scope.view.grid.enableRowSelection = true;
 	$scope.view.grid.enableRowHeaderSelection = true;
 
@@ -2734,6 +2747,8 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 	    });
 
 		$(view.cube.aggregates).each(function(idx, ag) {
+			console.log('view.cube.aggregates:');
+			console.log(ag);
 			var col = {
 				name: ag.label,
 				field: ag.ref,
@@ -2741,15 +2756,15 @@ angular.module('cv.views.cube').controller("CubesViewerViewsCubeExploreControlle
 				cellClass : "text-right",
 				type : "number",
 				headerCellClass: "cv-grid-header-measure",
-				width : $scope.defineColumnWidth(ag.ref, 115),
+				width : $scope.defineAggregateColumnWidth(ag.ref, ag.info.width),
 				visible: ! view.params.columnHide[ag.ref],
 				cellTemplate: '<div class="ui-grid-cell-contents" title="TOOLTIP">{{ col.colDef.formatter(COL_FIELD, row, col) }}</div>',
-				formatter: $scope.columnFormatFunction(ag),
+				formatter: $scope.columnNotFormatFunction(ag),
 				sort: $scope.defineColumnSort(ag.ref)
 				//formatoptions: {},
 				//cellattr: cubesviewer.views.cube.explore.columnTooltipAttr(ag.ref),
 			};
-			col.footerValue = $scope.columnFormatFunction(ag)(data.summary[ag.ref], null, col);
+			col.footerValue = $scope.columnNotFormatFunction(ag)(data.summary[ag.ref], null, col);
 			col.footerCellTemplate = '<div class="ui-grid-cell-contents text-right">{{ col.colDef.footerValue }}</div>';
 			view.grid.columnDefs.push(col);
 
@@ -7220,7 +7235,6 @@ angular.module('cv.cubes').service("gaService", ['$rootScope', '$http', '$cookie
     "</div>\n"
   );
 
-
   $templateCache.put('views/cube/cube-menu-drilldown.html',
     "  <button class=\"btn btn-primary btn-sm dropdown-toggle drilldownbutton\" ng-disabled=\"view.params.mode == 'facts'\" type=\"button\" data-toggle=\"dropdown\" data-submenu>\n" +
     "    <i class=\"fa fa-fw fa-arrow-down\"></i> <span class=\"hidden-xs\" ng-class=\"{ 'hidden-sm hidden-md': cvOptions.studioTwoColumn }\">Drilldown</span> <span class=\"caret\"></span>\n" +
@@ -7230,25 +7244,25 @@ angular.module('cv.cubes').service("gaService", ['$rootScope', '$http', '$cookie
     "\n" +
     "      <!-- if ((grayout_drill) && ((($.grep(view.params.drilldown, function(ed) { return ed == dimension.name; })).length > 0))) { -->\n" +
 	//"      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
-	"      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
+	"      <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1 && dimension.label.indexOf('YN')==-1\" ng-click=\"selectDrill(dimension.name, true);\">\n" +
     "        <a href=\"\">{{ dimension.label }}</a>\n" +
     "      </li>\n" +
     "      <li ng-repeat-end ng-if=\"dimension.levels.length != 1\" class=\"dropdown-submenu\">\n" +
-    "        <a tabindex=\"0\">{{ dimension.label }}</a>\n" +
-    "\n" +
-    "        <ul ng-if=\"dimension.hierarchies_count() != 1\" class=\"dropdown-menu\">\n" +
-    "            <li ng-repeat=\"(hikey,hi) in dimension.hierarchies\" class=\"dropdown-submenu\">\n" +
-    "                <a tabindex=\"0\" href=\"\" onclick=\"return false;\">{{ hi.label }}</a>\n" +
-    "                <ul class=\"dropdown-menu\">\n" +
-    "                    <li ng-repeat=\"level in hi.levels\" ng-click=\"selectDrill(dimension.name + '@' + hi.name + ':' + level.name, true)\"><a href=\"\">{{ level.label }}</a></li>\n" +
-    "                </ul>\n" +
-    "            </li>\n" +
-    "        </ul>\n" +
-    "\n" +
-    "        <ul ng-if=\"dimension.hierarchies_count() == 1\" class=\"dropdown-menu\">\n" +
-    "            <li ng-repeat=\"level in dimension.default_hierarchy().levels\" ng-click=\"selectDrill(dimension.name + '@' + dimension.default_hierarchy().name + ':' + level.name, true)\"><a href=\"\">{{ level.label }}</a></li>\n" +
-    "        </ul>\n" +
-    "\n" +
+//    "        <a tabindex=\"0\">{{ dimension.label }}</a>\n" +
+//    "\n" +
+//   "        <ul ng-if=\"dimension.hierarchies_count() != 1\" class=\"dropdown-menu\">\n" +
+//    "            <li ng-repeat=\"(hikey,hi) in dimension.hierarchies\" class=\"dropdown-submenu\">\n" +
+//    "                <a tabindex=\"0\" href=\"\" onclick=\"return false;\">{{ hi.label }}</a>\n" +
+//    "                <ul class=\"dropdown-menu\">\n" +
+//    "                    <li ng-repeat=\"level in hi.levels\" ng-click=\"selectDrill(dimension.name + '@' + hi.name + ':' + level.name, true)\"><a href=\"\">{{ level.label }}</a></li>\n" +
+//    "                </ul>\n" +
+//    "            </li>\n" +
+//    "        </ul>\n" +
+//    "\n" +
+//    "        <ul ng-if=\"dimension.hierarchies_count() == 1\" class=\"dropdown-menu\">\n" +
+//    "            <li ng-repeat=\"level in dimension.default_hierarchy().levels\" ng-click=\"selectDrill(dimension.name + '@' + dimension.default_hierarchy().name + ':' + level.name, true)\"><a href=\"\">{{ level.label }}</a></li>\n" +
+//    "        </ul>\n" +
+//    "\n" +
     "      </li>\n" +
     "\n" +
     "      <div class=\"divider\"></div>\n" +
@@ -7274,11 +7288,16 @@ angular.module('cv.cubes').service("gaService", ['$rootScope', '$http', '$cookie
     "        <a tabindex=\"0\"><i class=\"fa fa-fw fa-bars\"></i> Dimension filter</a>\n" +
     "        <ul class=\"dropdown-menu\">\n" +
     "\n" +
-    "          <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1\" ng-click=\"showDimensionFilter(dimension.name);\">\n" +
+    "          <li on-repeat-done ng-repeat-start=\"dimension in view.cube.dimensions\" ng-if=\"dimension.levels.length == 1 && dimension.label.indexOf('YN')!=-1\" ng-click=\"showDimensionFilter(dimension.name);\">\n" +
     "            <a href=\"\">{{ dimension.label }}</a>\n" +
     "          </li>\n" +
-    "          <li ng-repeat-end ng-if=\"dimension.levels.length != 1\" class=\"dropdown-submenu\">\n" +
-    "            <a tabindex=\"0\">{{ dimension.label }}</a>\n" +
+	"          <li ng-repeat-end ng-if=\"dimension.levels.length != 1\" class=\"dropdown-submenu\">\n" +
+
+	/** 
+	 * remove by gholay 
+	 * filter menu at 20180615
+	 */
+ /*   "            <a tabindex=\"0\">{{ dimension.label }}</a>\n" +
     "\n" +
     "            <ul ng-if=\"dimension.hierarchies_count() != 1\" class=\"dropdown-menu\">\n" +
     "                <li ng-repeat=\"(hikey,hi) in dimension.hierarchies\" class=\"dropdown-submenu\">\n" +
@@ -7294,7 +7313,8 @@ angular.module('cv.cubes').service("gaService", ['$rootScope', '$http', '$cookie
     "                <!--  selectDrill(dimension.name + ':' + level.name, true) -->\n" +
     "                <li ng-repeat=\"level in dimension.default_hierarchy().levels\" ng-click=\"showDimensionFilter(dimension.name + '@' + dimension.default_hierarchy().name + ':' + level.name);\"><a href=\"\">{{ level.label }}</a></li>\n" +
     "            </ul>\n" +
-    "\n" +
+	"\n" +
+*/	
     "          </li>\n" +
     "\n" +
     "        </ul>\n" +
